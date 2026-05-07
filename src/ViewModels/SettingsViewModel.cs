@@ -29,6 +29,7 @@ public class SettingsViewModel : INotifyPropertyChanged
         EnableSensitiveContentDetection = s.EnableSensitiveContentDetection;
         MinimizeToTray = s.MinimizeToTray;
         ShowCopyNotification = s.ShowCopyNotification;
+        ThemeColor = s.ThemeColor;
     }
 
     private int _maxHistoryCount;
@@ -87,6 +88,53 @@ public class SettingsViewModel : INotifyPropertyChanged
         set { _showCopyNotification = value; OnPropertyChanged(); }
     }
 
+    private string _themeColor = "Blue";
+    public string ThemeColor
+    {
+        get => _themeColor;
+        set
+        {
+            _themeColor = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsBlueTheme));
+            OnPropertyChanged(nameof(IsGreenTheme));
+            OnPropertyChanged(nameof(IsPurpleTheme));
+            OnPropertyChanged(nameof(IsOrangeTheme));
+            OnPropertyChanged(nameof(IsPinkTheme));
+        }
+    }
+
+    // 主题颜色选择绑定
+    public bool IsBlueTheme
+    {
+        get => ThemeColor == "Blue";
+        set { if (value) ThemeColor = "Blue"; }
+    }
+
+    public bool IsGreenTheme
+    {
+        get => ThemeColor == "Green";
+        set { if (value) ThemeColor = "Green"; }
+    }
+
+    public bool IsPurpleTheme
+    {
+        get => ThemeColor == "Purple";
+        set { if (value) ThemeColor = "Purple"; }
+    }
+
+    public bool IsOrangeTheme
+    {
+        get => ThemeColor == "Orange";
+        set { if (value) ThemeColor = "Orange"; }
+    }
+
+    public bool IsPinkTheme
+    {
+        get => ThemeColor == "Pink";
+        set { if (value) ThemeColor = "Pink"; }
+    }
+
     /// <summary>
     /// 保存设置
     /// </summary>
@@ -102,7 +150,11 @@ public class SettingsViewModel : INotifyPropertyChanged
             s.EnableSensitiveContentDetection = EnableSensitiveContentDetection;
             s.MinimizeToTray = MinimizeToTray;
             s.ShowCopyNotification = ShowCopyNotification;
+            s.ThemeColor = ThemeColor;
         });
+
+        // 应用主题
+        ThemeService.ApplyTheme(ThemeColor);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

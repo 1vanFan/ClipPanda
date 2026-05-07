@@ -59,4 +59,19 @@ public class AppSettings
     /// 是否显示复制通知
     /// </summary>
     public bool ShowCopyNotification { get; set; } = false;
+
+    /// <summary>
+    /// 最后选中的历史记录ID
+    /// </summary>
+    public int LastSelectedItemId { get; set; } = 0;
+
+    /// <summary>
+    /// 最后选中的Tab（0=全部，1=收藏）
+    /// </summary>
+    public int LastSelectedTab { get; set; } = 0;
+
+    /// <summary>
+    /// 主题配色（Blue, Green, Purple, Orange, Pink）
+    /// </summary>
+    public string ThemeColor { get; set; } = "Blue";
 }

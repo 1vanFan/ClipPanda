@@ -30,6 +30,9 @@ public partial class App : Application
             // 初始化设置服务
             _settingsService = new SettingsService();
 
+            // 应用主题
+            ThemeService.ApplyTheme(_settingsService.Settings.ThemeColor);
+
             // 初始化数据库
             _databaseService = new DatabaseService();
 

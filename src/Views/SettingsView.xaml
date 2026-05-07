@@ -122,6 +122,45 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- 外观设置 -->
+                    <TextBlock Text="外观" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8"/>
+                    <Border Style="{StaticResource CardStyle}" Padding="12" Margin="0,0,0,16">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="主题配色" FontSize="13"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <RadioButton Style="{StaticResource ColorRadioStyle}" 
+                                                 Tag="Blue" GroupName="ThemeColor"
+                                                 IsChecked="{Binding IsBlueTheme}"
+                                                 Background="#2B579A"/>
+                                    <RadioButton Style="{StaticResource ColorRadioStyle}" 
+                                                 Tag="Green" GroupName="ThemeColor"
+                                                 IsChecked="{Binding IsGreenTheme}"
+                                                 Background="#107C10"/>
+                                    <RadioButton Style="{StaticResource ColorRadioStyle}" 
+                                                 Tag="Purple" GroupName="ThemeColor"
+                                                 IsChecked="{Binding IsPurpleTheme}"
+                                                 Background="#5C2D91"/>
+                                    <RadioButton Style="{StaticResource ColorRadioStyle}" 
+                                                 Tag="Orange" GroupName="ThemeColor"
+                                                 IsChecked="{Binding IsOrangeTheme}"
+                                                 Background="#D83B01"/>
+                                    <RadioButton Style="{StaticResource ColorRadioStyle}" 
+                                                 Tag="Pink" GroupName="ThemeColor"
+                                                 IsChecked="{Binding IsPinkTheme}"
+                                                 Background="#C30052"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
                     <!-- 功能开关 -->
                     <TextBlock Text="功能" FontSize="14" FontWeight="SemiBold"
                                Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8"/>

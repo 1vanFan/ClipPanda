@@ -67,7 +67,7 @@
                             <Setter TargetName="Bd" Property="Background" Value="#F0F0F0"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="#E8F4FC"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource SelectedItemBackground}"/>
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
                             <Setter TargetName="Bd" Property="BorderThickness" Value="1"/>
                         </Trigger>
@@ -108,6 +108,9 @@
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="0"/>
     </Style>
+
+    <!-- 选中项背景（主题色） -->
+    <SolidColorBrush x:Key="SelectedItemBackground" Color="#E8F4FC"/>
 
     <!-- 现代按钮模板 -->
     <ControlTemplate x:Key="ModernButtonTemplate" TargetType="Button">
@@ -214,6 +217,43 @@
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="#F5F5F5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 颜色选择器样式 -->
+    <Style x:Key="ColorRadioStyle" TargetType="RadioButton">
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Margin" Value="4,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="12"
+                            BorderThickness="0"
+                            Width="24" Height="24">
+                        <Border.Effect>
+                            <DropShadowEffect ShadowDepth="0" BlurRadius="4" Opacity="0.3"/>
+                        </Border.Effect>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="White"/>
+                            <Setter TargetName="Bd" Property="BorderThickness" Value="3"/>
+                            <Setter TargetName="Bd" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect ShadowDepth="0" BlurRadius="6" Opacity="0.5"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
