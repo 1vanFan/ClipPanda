@@ -96,6 +96,34 @@ public class DatabaseService : IDisposable
     }
 
     /// <summary>
+    /// 获取收藏条目
+    /// </summary>
+    public async Task<List<ClipboardItem>> GetFavoriteItemsAsync(int limit = 100)
+    {
+        return await _context.ClipboardItems
+            .Where(i => i.IsFavorited)
+            .OrderByDescending(i => i.CopyTime)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// 搜索收藏条目
+    /// </summary>
+    public async Task<List<ClipboardItem>> SearchFavoriteItemsAsync(string keyword, int limit = 100)
+    {
+        if (string.IsNullOrWhiteSpace(keyword))
+            return await GetFavoriteItemsAsync(limit);
+
+        var lowerKeyword = keyword.ToLower();
+        return await _context.ClipboardItems
+            .Where(i => i.IsFavorited && i.Preview != null && i.Preview.ToLower().Contains(lowerKeyword))
+            .OrderByDescending(i => i.CopyTime)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    /// <summary>
     /// 根据ID获取条目
     /// </summary>
     public async Task<ClipboardItem?> GetItemByIdAsync(int id)

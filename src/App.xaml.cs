@@ -15,6 +15,7 @@ public partial class App : Application
     private DatabaseService? _databaseService;
     private ClipboardMonitorService? _clipboardMonitor;
     private HotkeyService? _hotkeyService;
+    private SettingsService? _settingsService;
     private MainWindow? _mainWindow;
     private TaskbarIcon? _taskbarIcon;
 
@@ -26,12 +27,20 @@ public partial class App : Application
         {
             System.Diagnostics.Debug.WriteLine("[ClipPanda] 应用程序启动中...");
 
-            // 初始化服务
+            // 初始化设置服务
+            _settingsService = new SettingsService();
+
+            // 初始化数据库
             _databaseService = new DatabaseService();
+
+            // 初始化快捷键服务
             _hotkeyService = new HotkeyService();
             _hotkeyService.Initialize();
 
-            _clipboardMonitor = new ClipboardMonitorService(_databaseService, enableDeduplication: true);
+            // 初始化剪贴板监听
+            _clipboardMonitor = new ClipboardMonitorService(
+                _databaseService,
+                enableDeduplication: _settingsService.Settings.EnableAutoDeduplication);
             _clipboardMonitor.Start();
 
             // 订阅错误事件
@@ -41,7 +50,7 @@ public partial class App : Application
             System.Diagnostics.Debug.WriteLine("[ClipPanda] 服务初始化完成");
 
             // 创建主窗口（初始不显示）
-            _mainWindow = new MainWindow(_databaseService, _clipboardMonitor, _hotkeyService);
+            _mainWindow = new MainWindow(_databaseService, _clipboardMonitor, _hotkeyService, _settingsService);
             System.Diagnostics.Debug.WriteLine("[ClipPanda] 主窗口创建完成");
 
             // 创建系统托盘图标
@@ -49,20 +58,7 @@ public partial class App : Application
             System.Diagnostics.Debug.WriteLine("[ClipPanda] 系统托盘图标创建完成");
 
             // 注册主快捷键
-            bool hotkeyRegistered = _hotkeyService.RegisterHotkey("Ctrl+Shift+C", () =>
-            {
-                _mainWindow.ToggleVisibility();
-            });
-
-            if (!hotkeyRegistered)
-            {
-                MessageBox.Show("无法注册快捷键 Ctrl+Shift+C，可能已被其他程序占用。\n请在设置中更改快捷键。",
-                    "ClipPanda", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("[ClipPanda] 快捷键注册成功");
-            }
+            RegisterMainHotkey();
 
             // 启动时清理过期记录
             _ = CleanupExpiredItemsAsync();
@@ -74,7 +70,31 @@ public partial class App : Application
             System.Diagnostics.Debug.WriteLine($"[ClipPanda] 启动错误: {ex}");
             MessageBox.Show($"应用程序启动失败:\n{ex.Message}\n\n{ex.StackTrace}",
                 "ClipPanda 错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-            // 不调用 Shutdown，让应用程序继续运行
+        }
+    }
+
+    /// <summary>
+    /// 注册主快捷键
+    /// </summary>
+    private void RegisterMainHotkey()
+    {
+        if (_hotkeyService == null || _mainWindow == null || _settingsService == null)
+            return;
+
+        var hotkey = _settingsService.Settings.MainHotkey;
+        bool hotkeyRegistered = _hotkeyService.RegisterHotkey(hotkey, () =>
+        {
+            _mainWindow.ToggleVisibility();
+        });
+
+        if (!hotkeyRegistered)
+        {
+            MessageBox.Show($"无法注册快捷键 {hotkey}，可能已被其他程序占用。\n请在设置中更改快捷键。",
+                "ClipPanda", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine($"[ClipPanda] 快捷键 {hotkey} 注册成功");
         }
     }
 
@@ -83,7 +103,6 @@ public partial class App : Application
     /// </summary>
     private void CreateTaskbarIcon()
     {
-        // 创建一个简单的图标
         var icon = CreateSimpleIcon();
 
         _taskbarIcon = new TaskbarIcon
@@ -103,7 +122,7 @@ public partial class App : Application
                     new System.Windows.Controls.MenuItem
                     {
                         Header = "设置",
-                        Command = new RelayCommand(() => MessageBox.Show("设置功能将在后续版本中提供"))
+                        Command = new RelayCommand(OpenSettings)
                     },
                     new System.Windows.Controls.Separator(),
                     new System.Windows.Controls.MenuItem
@@ -122,16 +141,29 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// 打开设置窗口
+    /// </summary>
+    private void OpenSettings()
+    {
+        if (_settingsService == null || _mainWindow == null) return;
+
+        var settingsWindow = new SettingsView(_settingsService)
+        {
+            Owner = _mainWindow
+        };
+        settingsWindow.ShowDialog();
+    }
+
+    /// <summary>
     /// 创建简单的图标 - 熊猫剪贴板
     /// </summary>
     private Icon CreateSimpleIcon()
     {
-        // 创建一个 32x32 的位图
         using var bitmap = new Bitmap(32, 32);
         using var graphics = Graphics.FromImage(bitmap);
 
         // 填充背景 - 熊猫黑白色
-        graphics.Clear(Color.FromArgb(45, 45, 45)); // 深灰色背景
+        graphics.Clear(Color.FromArgb(45, 45, 45));
 
         // 绘制熊猫耳朵（黑色圆）
         using var earBrush = new SolidBrush(Color.FromArgb(45, 45, 45));
@@ -156,14 +188,13 @@ public partial class App : Application
         graphics.FillEllipse(eyeBrush, 14, 19, 4, 3);
 
         // 绘制剪贴板背景（底部）
-        using var boardBrush = new SolidBrush(Color.FromArgb(43, 87, 154)); // 蓝色
+        using var boardBrush = new SolidBrush(Color.FromArgb(43, 87, 154));
         graphics.FillRectangle(boardBrush, 6, 24, 20, 6);
 
         // 绘制剪贴板夹子
         using var clipBrush = new SolidBrush(Color.White);
         graphics.FillRectangle(clipBrush, 12, 22, 8, 5);
 
-        // 转换为图标
         var hIcon = bitmap.GetHicon();
         return Icon.FromHandle(hIcon);
     }
@@ -173,9 +204,9 @@ public partial class App : Application
     /// </summary>
     private async Task CleanupExpiredItemsAsync()
     {
-        if (_databaseService != null)
+        if (_databaseService != null && _settingsService != null)
         {
-            var count = await _databaseService.CleanupExpiredItemsAsync(7);
+            var count = await _databaseService.CleanupExpiredItemsAsync(_settingsService.Settings.HistoryRetentionDays);
             if (count > 0)
             {
                 System.Diagnostics.Debug.WriteLine($"已清理 {count} 条过期记录");
@@ -222,8 +253,6 @@ public class RelayCommand : System.Windows.Input.ICommand
     public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-
     public void Execute(object? parameter) => _execute();
-
     public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }

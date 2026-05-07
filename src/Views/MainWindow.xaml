@@ -25,6 +25,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -80,8 +81,24 @@
                 </Grid>
             </Border>
 
+            <!-- Tab 切换栏 -->
+            <Border Grid.Row="2" Margin="12,8,12,0" Padding="4">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton Content="全部"
+                                 Style="{StaticResource TabButtonStyle}"
+                                 IsChecked="{Binding ShowFavoritesOnly, Converter={StaticResource InvertBoolConverter}, Mode=OneWay}"
+                                 GroupName="TabGroup"
+                                 Click="AllTab_Click"/>
+                    <RadioButton Content="收藏"
+                                 Style="{StaticResource TabButtonStyle}"
+                                 IsChecked="{Binding ShowFavoritesOnly, Mode=OneWay}"
+                                 GroupName="TabGroup"
+                                 Click="FavoritesTab_Click"/>
+                </StackPanel>
+            </Border>
+
             <!-- 列表区域 -->
-            <Border Grid.Row="2" Margin="12,12,12,0" Style="{StaticResource CardStyle}">
+            <Border Grid.Row="3" Margin="12,8,12,0" Style="{StaticResource CardStyle}">
                 <ListBox x:Name="ClipboardListBox"
                          ItemsSource="{Binding ClipboardItems}"
                          SelectedItem="{Binding SelectedItem}"
@@ -99,14 +116,16 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- 类型图标 -->
+                                <!-- 类型图标（正方形） -->
                                 <Border Grid.Column="0"
                                         Width="32" Height="32"
-                                        CornerRadius="4"
-                                        Background="#F0F0F0"
+                                        CornerRadius="6"
+                                        Background="{Binding ContentTypeColor}"
                                         Margin="0,0,12,0">
                                     <TextBlock Text="{Binding ContentTypeIcon}"
-                                               FontSize="14"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="White"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"/>
                                 </Border>
@@ -140,7 +159,7 @@
             </Border>
 
             <!-- 底部状态栏 -->
-            <Border Grid.Row="3" Padding="12,8" Background="Transparent">
+            <Border Grid.Row="4" Padding="12,8" Background="Transparent">
                 <Grid>
                     <TextBlock Text="{Binding StatusText}"
                                FontSize="11"

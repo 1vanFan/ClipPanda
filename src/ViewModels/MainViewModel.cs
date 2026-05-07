@@ -26,12 +26,22 @@ public class ClipboardItemViewModel : INotifyPropertyChanged
 
     public string ContentTypeIcon => _item.ContentType switch
     {
-        ContentType.Text => "📝",
-        ContentType.Html => "🌐",
-        ContentType.Image => "🖼️",
-        ContentType.Files => "📁",
-        ContentType.Rtf => "📄",
-        _ => "📋"
+        ContentType.Text => "T",
+        ContentType.Html => "H",
+        ContentType.Image => "IMG",
+        ContentType.Files => "F",
+        ContentType.Rtf => "R",
+        _ => "?"
+    };
+
+    public string ContentTypeColor => _item.ContentType switch
+    {
+        ContentType.Text => "#2B579A",
+        ContentType.Html => "#0078D4",
+        ContentType.Image => "#107C10",
+        ContentType.Files => "#D83B01",
+        ContentType.Rtf => "#8764B8",
+        _ => "#666666"
     };
 
     public string Preview => _item.GetDisplayPreview(80);
@@ -79,6 +89,7 @@ public class MainViewModel : INotifyPropertyChanged
     private ClipboardItemViewModel? _selectedItem;
     private string _searchText = string.Empty;
     private string _statusText = "就绪";
+    private bool _showFavoritesOnly;
 
     public MainViewModel(DatabaseService databaseService)
     {
@@ -126,16 +137,54 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// 是否仅显示收藏
+    /// </summary>
+    public bool ShowFavoritesOnly
+    {
+        get => _showFavoritesOnly;
+        set
+        {
+            _showFavoritesOnly = value;
+            OnPropertyChanged();
+            _ = LoadItemsAsync();
+        }
+    }
+
     public async Task LoadItemsAsync()
     {
-        var items = string.IsNullOrWhiteSpace(SearchText)
-            ? await _databaseService.GetAllItemsAsync(100)
-            : await _databaseService.SearchItemsAsync(SearchText, 100);
+        List<ClipboardItem> items;
+
+        if (_showFavoritesOnly)
+        {
+            // 仅显示收藏
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                items = await _databaseService.GetFavoriteItemsAsync(100);
+            }
+            else
+            {
+                items = await _databaseService.SearchFavoriteItemsAsync(SearchText, 100);
+            }
+        }
+        else
+        {
+            // 显示全部
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                items = await _databaseService.GetAllItemsAsync(100);
+            }
+            else
+            {
+                items = await _databaseService.SearchItemsAsync(SearchText, 100);
+            }
+        }
 
         ClipboardItems = new ObservableCollection<ClipboardItemViewModel>(
             items.Select(i => new ClipboardItemViewModel(i)));
 
-        StatusText = $"共 {ClipboardItems.Count} 条记录";
+        var tabLabel = _showFavoritesOnly ? "收藏" : "全部";
+        StatusText = $"{tabLabel} - 共 {ClipboardItems.Count} 条记录";
     }
 
     public void RefreshItems()

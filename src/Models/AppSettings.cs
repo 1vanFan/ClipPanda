@@ -23,7 +23,7 @@ public class AppSettings
     /// <summary>
     /// 主快捷键
     /// </summary>
-    public string MainHotkey { get; set; } = "Ctrl+`";
+    public string MainHotkey { get; set; } = "Ctrl+Shift+C";
 
     /// <summary>
     /// 是否启用自动去重

@@ -17,12 +17,14 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
     private readonly DatabaseService _databaseService;
+    private readonly SettingsService _settingsService;
 
-    public MainWindow(DatabaseService databaseService, ClipboardMonitorService clipboardMonitor, HotkeyService hotkeyService)
+    public MainWindow(DatabaseService databaseService, ClipboardMonitorService clipboardMonitor, HotkeyService hotkeyService, SettingsService settingsService)
     {
         InitializeComponent();
 
         _databaseService = databaseService;
+        _settingsService = settingsService;
         _viewModel = new MainViewModel(databaseService);
         DataContext = _viewModel;
 
@@ -34,10 +36,7 @@ public partial class MainWindow : Window
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        // 加载完成后聚焦到搜索框
         SearchTextBox.Focus();
-
-        // 居中窗口
         CenterWindow();
     }
 
@@ -89,6 +88,22 @@ public partial class MainWindow : Window
     private void MainWindow_OnDeactivated(object? sender, EventArgs e)
     {
         // 可选：失去焦点时自动隐藏
+    }
+
+    /// <summary>
+    /// Tab 切换 - 全部
+    /// </summary>
+    private void AllTab_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.ShowFavoritesOnly = false;
+    }
+
+    /// <summary>
+    /// Tab 切换 - 收藏
+    /// </summary>
+    private void FavoritesTab_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.ShowFavoritesOnly = true;
     }
 
     /// <summary>
@@ -146,7 +161,6 @@ public partial class MainWindow : Window
         {
             var item = _viewModel.SelectedItem.Item;
 
-            // 设置剪贴板内容
             if (item.ContentType == ContentType.Text ||
                 item.ContentType == ContentType.Html ||
                 item.ContentType == ContentType.Rtf ||
@@ -159,10 +173,8 @@ public partial class MainWindow : Window
                 // 图片粘贴需要转换为 BitmapSource
             }
 
-            // 更新使用次数
             _ = _databaseService.IncrementUseCountAsync(item.Id);
 
-            // 模拟粘贴操作（发送 Ctrl+V）
             Hide();
             SendPasteKey();
         }
@@ -173,7 +185,6 @@ public partial class MainWindow : Window
     /// </summary>
     private void SendPasteKey()
     {
-        // 使用 SendKeys 发送 Ctrl+V
         System.Windows.Forms.SendKeys.SendWait("^v");
     }
 
@@ -216,6 +227,10 @@ public partial class MainWindow : Window
     /// </summary>
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show("设置功能将在后续版本中提供", "ClipPanda", MessageBoxButton.OK, MessageBoxImage.Information);
+        var settingsWindow = new SettingsView(_settingsService)
+        {
+            Owner = this
+        };
+        settingsWindow.ShowDialog();
     }
 }
