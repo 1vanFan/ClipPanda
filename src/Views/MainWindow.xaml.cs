@@ -5,6 +5,8 @@ using ClipPanda.Services;
 using ClipPanda.ViewModels;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using TextChangedEventArgs = System.Windows.Controls.TextChangedEventArgs;
+using MessageBox = System.Windows.MessageBox;
+using Clipboard = System.Windows.Clipboard;
 
 namespace ClipPanda.Views;
 
@@ -93,7 +95,6 @@ public partial class MainWindow : Window
     private void MainWindow_OnDeactivated(object? sender, EventArgs e)
     {
         // 可选：失去焦点时自动隐藏
-        // Hide();
     }
 
     /// <summary>
@@ -149,7 +150,7 @@ public partial class MainWindow : Window
     {
         if (_viewModel.SelectedItem != null)
         {
-            var item = _viewModel.SelectedItem;
+            var item = _viewModel.SelectedItem.Item;
 
             // 设置剪贴板内容
             if (item.ContentType == ContentType.Text ||
@@ -197,12 +198,13 @@ public partial class MainWindow : Window
     /// <summary>
     /// 切换收藏状态
     /// </summary>
-    private void ToggleFavoriteSelectedItem()
+    private async void ToggleFavoriteSelectedItem()
     {
         if (_viewModel.SelectedItem != null)
         {
-            _viewModel.SelectedItem.IsFavorited = !_viewModel.SelectedItem.IsFavorited;
-            _ = _databaseService.UpdateItemAsync(_viewModel.SelectedItem);
+            var item = _viewModel.SelectedItem.Item;
+            item.IsFavorited = !item.IsFavorited;
+            await _databaseService.UpdateItemAsync(item);
             _viewModel.RefreshItems();
         }
     }

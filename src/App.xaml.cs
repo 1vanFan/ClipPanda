@@ -1,9 +1,9 @@
 using System.Drawing;
-using System.Windows;
 using ClipPanda.Services;
 using ClipPanda.Views;
 using Hardcodet.Wpf.TaskbarNotification;
 using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace ClipPanda;
 
@@ -18,7 +18,7 @@ public partial class App : Application
     private MainWindow? _mainWindow;
     private TaskbarIcon? _taskbarIcon;
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override void OnStartup(System.Windows.StartupEventArgs e)
     {
         base.OnStartup(e);
 
@@ -47,7 +47,7 @@ public partial class App : Application
         }))
         {
             MessageBox.Show("无法注册快捷键 Ctrl+`，可能已被其他程序占用。\n请在设置中更改快捷键。",
-                "ClipPanda", MessageBoxButton.OK, MessageBoxImage.Warning);
+                "ClipPanda", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
         }
 
         // 启动时清理过期记录
@@ -64,7 +64,7 @@ public partial class App : Application
 
         _taskbarIcon = new TaskbarIcon
         {
-            ToolTipText = "ClipPanda - 剪贴板管理器 🐼",
+            ToolTipText = "ClipPanda - 剪贴板管理器",
             Icon = icon,
 
             ContextMenu = new System.Windows.Controls.ContextMenu
@@ -91,7 +91,7 @@ public partial class App : Application
             }
         };
 
-        _taskbarIcon.TrayLeftMouseDown += (s, e) =>
+        _taskbarIcon.TrayLeftMouseDown += (s, ev) =>
         {
             _mainWindow?.ToggleVisibility();
         };
@@ -170,7 +170,7 @@ public partial class App : Application
         });
     }
 
-    protected override void OnExit(ExitEventArgs e)
+    protected override void OnExit(System.Windows.ExitEventArgs e)
     {
         _clipboardMonitor?.Dispose();
         _hotkeyService?.Dispose();
