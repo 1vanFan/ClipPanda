@@ -25,6 +25,16 @@ public class ClipboardMonitorService : IDisposable
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+    private const int GWL_EXSTYLE = -20;
+    private const int WS_EX_TOOLWINDOW = 0x00000080;
+    private const int WS_EX_NOACTIVATE = 0x08000000;
+
     private const int WM_CLIPBOARDUPDATE = 0x031D;
 
     #endregion
@@ -60,10 +70,15 @@ public class ClipboardMonitorService : IDisposable
 
         var parameters = new HwndSourceParameters("ClipboardMonitorWindow")
         {
-            HwndSourceHook = WndProc
+            HwndSourceHook = WndProc,
+            WindowStyle = 0 // 无边框不可见窗口
         };
         _hwndSource = new HwndSource(parameters);
         _hwnd = _hwndSource.Handle;
+
+        // 设置窗口样式：工具窗口 + 不激活，使其不在任务栏显示
+        int exStyle = GetWindowLong(_hwnd, GWL_EXSTYLE);
+        SetWindowLong(_hwnd, GWL_EXSTYLE, exStyle | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE);
 
         if (!AddClipboardFormatListener(_hwnd))
         {
