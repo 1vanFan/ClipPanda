@@ -13,6 +13,7 @@
     <Authors>ClipMaster Team</Authors>
     <Description>A modern clipboard manager for Windows 11</Description>
     <Copyright>Copyright © 2024</Copyright>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

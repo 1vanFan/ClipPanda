@@ -147,7 +147,7 @@
                                Foreground="{StaticResource TextMutedBrush}"
                                VerticalAlignment="Center"/>
 
-                    <TextBlock Text="Ctrl+` 切换 | Enter 粘贴 | Ctrl+S 收藏 | Del 删除"
+                    <TextBlock Text="Ctrl+Shift+C 切换 | Enter 粘贴 | Ctrl+S 收藏 | Del 删除"
                                FontSize="11"
                                Foreground="{StaticResource TextMutedBrush}"
                                HorizontalAlignment="Right"

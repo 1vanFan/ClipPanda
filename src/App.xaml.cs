@@ -49,14 +49,14 @@ public partial class App : Application
             System.Diagnostics.Debug.WriteLine("[ClipPanda] 系统托盘图标创建完成");
 
             // 注册主快捷键
-            bool hotkeyRegistered = _hotkeyService.RegisterHotkey("Ctrl+`", () =>
+            bool hotkeyRegistered = _hotkeyService.RegisterHotkey("Ctrl+Shift+C", () =>
             {
                 _mainWindow.ToggleVisibility();
             });
 
             if (!hotkeyRegistered)
             {
-                MessageBox.Show("无法注册快捷键 Ctrl+`，可能已被其他程序占用。\n请在设置中更改快捷键。",
+                MessageBox.Show("无法注册快捷键 Ctrl+Shift+C，可能已被其他程序占用。\n请在设置中更改快捷键。",
                     "ClipPanda", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
             }
             else
