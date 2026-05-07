@@ -29,12 +29,6 @@ public partial class MainWindow : Window
         // 订阅剪贴板变化事件
         clipboardMonitor.ClipboardChanged += OnClipboardChanged;
 
-        // 注册快捷键
-        hotkeyService.RegisterHotkey("Ctrl+`", ToggleVisibility);
-
-        // 初始隐藏窗口
-        Hide();
-
         Loaded += MainWindow_Loaded;
     }
 

@@ -22,36 +22,60 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // 初始化服务
-        _databaseService = new DatabaseService();
-        _hotkeyService = new HotkeyService();
-        _hotkeyService.Initialize();
-
-        _clipboardMonitor = new ClipboardMonitorService(_databaseService, enableDeduplication: true);
-        _clipboardMonitor.Start();
-
-        // 订阅错误事件
-        _clipboardMonitor.ErrorOccurred += OnServiceError;
-        _hotkeyService.ErrorOccurred += OnServiceError;
-
-        // 创建主窗口
-        _mainWindow = new MainWindow(_databaseService, _clipboardMonitor, _hotkeyService);
-
-        // 创建系统托盘图标
-        CreateTaskbarIcon();
-
-        // 注册主快捷键
-        if (!_hotkeyService.RegisterHotkey("Ctrl+`", () =>
+        try
         {
-            _mainWindow.ToggleVisibility();
-        }))
-        {
-            MessageBox.Show("无法注册快捷键 Ctrl+`，可能已被其他程序占用。\n请在设置中更改快捷键。",
-                "ClipPanda", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            System.Diagnostics.Debug.WriteLine("[ClipPanda] 应用程序启动中...");
+
+            // 初始化服务
+            _databaseService = new DatabaseService();
+            _hotkeyService = new HotkeyService();
+            _hotkeyService.Initialize();
+
+            _clipboardMonitor = new ClipboardMonitorService(_databaseService, enableDeduplication: true);
+            _clipboardMonitor.Start();
+
+            // 订阅错误事件
+            _clipboardMonitor.ErrorOccurred += OnServiceError;
+            _hotkeyService.ErrorOccurred += OnServiceError;
+
+            System.Diagnostics.Debug.WriteLine("[ClipPanda] 服务初始化完成");
+
+            // 创建主窗口（初始不显示）
+            _mainWindow = new MainWindow(_databaseService, _clipboardMonitor, _hotkeyService);
+            System.Diagnostics.Debug.WriteLine("[ClipPanda] 主窗口创建完成");
+
+            // 创建系统托盘图标
+            CreateTaskbarIcon();
+            System.Diagnostics.Debug.WriteLine("[ClipPanda] 系统托盘图标创建完成");
+
+            // 注册主快捷键
+            bool hotkeyRegistered = _hotkeyService.RegisterHotkey("Ctrl+`", () =>
+            {
+                _mainWindow.ToggleVisibility();
+            });
+
+            if (!hotkeyRegistered)
+            {
+                MessageBox.Show("无法注册快捷键 Ctrl+`，可能已被其他程序占用。\n请在设置中更改快捷键。",
+                    "ClipPanda", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[ClipPanda] 快捷键注册成功");
+            }
+
+            // 启动时清理过期记录
+            _ = CleanupExpiredItemsAsync();
+
+            System.Diagnostics.Debug.WriteLine("[ClipPanda] 应用程序启动完成");
         }
-
-        // 启动时清理过期记录
-        _ = CleanupExpiredItemsAsync();
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ClipPanda] 启动错误: {ex}");
+            MessageBox.Show($"应用程序启动失败:\n{ex.Message}\n\n{ex.StackTrace}",
+                "ClipPanda 错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            // 不调用 Shutdown，让应用程序继续运行
+        }
     }
 
     /// <summary>
