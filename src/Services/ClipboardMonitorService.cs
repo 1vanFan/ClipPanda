@@ -1,9 +1,12 @@
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
-using System.Windows;
 using System.Windows.Interop;
 using ClipPanda.Models;
+using Application = System.Windows.Application;
+using Clipboard = System.Windows.Clipboard;
+using DataFormats = System.Windows.DataFormats;
 
 namespace ClipPanda.Services;
 
@@ -55,7 +58,6 @@ public class ClipboardMonitorService : IDisposable
     {
         if (_isMonitoring) return;
 
-        // 创建一个隐藏的窗口用于接收消息
         var parameters = new HwndSourceParameters("ClipboardMonitorWindow")
         {
             HwndSourceHook = WndProc
@@ -104,18 +106,15 @@ public class ClipboardMonitorService : IDisposable
     {
         try
         {
-            // 在UI线程访问剪贴板
             var item = await Application.Current.Dispatcher.InvokeAsync(() => CaptureClipboardContent());
 
             if (item == null) return;
 
-            // 去重检查
             if (_enableDeduplication && !string.IsNullOrEmpty(item.ContentHash))
             {
                 var existingItem = await _databaseService.FindByHashAsync(item.ContentHash);
                 if (existingItem != null)
                 {
-                    // 更新时间戳，不创建新条目
                     existingItem.CopyTime = DateTime.Now;
                     await _databaseService.UpdateItemAsync(existingItem);
                     ClipboardChanged?.Invoke(existingItem);
@@ -123,7 +122,6 @@ public class ClipboardMonitorService : IDisposable
                 }
             }
 
-            // 保存到数据库
             await _databaseService.AddItemAsync(item);
             ClipboardChanged?.Invoke(item);
         }
@@ -154,7 +152,6 @@ public class ClipboardMonitorService : IDisposable
                 IsFavorited = false
             };
 
-            // 优先处理文本内容
             if (Clipboard.ContainsData(DataFormats.UnicodeText) || Clipboard.ContainsData(DataFormats.Text))
             {
                 var text = Clipboard.GetText();
@@ -163,18 +160,15 @@ public class ClipboardMonitorService : IDisposable
                 item.Preview = GeneratePreview(text);
                 item.ContentHash = ComputeHash(text);
 
-                // 检测是否为HTML
                 if (Clipboard.ContainsData(DataFormats.Html))
                 {
                     item.ContentType = ContentType.Html;
                 }
-                // 检测是否为RTF
                 else if (Clipboard.ContainsData(DataFormats.Rtf))
                 {
                     item.ContentType = ContentType.Rtf;
                 }
             }
-            // 处理图片
             else if (Clipboard.ContainsData(DataFormats.Bitmap))
             {
                 var image = Clipboard.GetImage();
@@ -186,7 +180,6 @@ public class ClipboardMonitorService : IDisposable
                     item.ContentHash = ComputeHash(item.BinaryContent);
                 }
             }
-            // 处理文件
             else if (Clipboard.ContainsFileDropList())
             {
                 var files = Clipboard.GetFileDropList();
@@ -203,9 +196,8 @@ public class ClipboardMonitorService : IDisposable
 
             return string.IsNullOrEmpty(item.Preview) ? null : item;
         }
-        catch (Exception)
+        catch
         {
-            // 剪贴板可能被其他程序占用，忽略错误
             return null;
         }
     }
@@ -214,7 +206,6 @@ public class ClipboardMonitorService : IDisposable
     {
         if (string.IsNullOrEmpty(text)) return string.Empty;
 
-        // 移除多余的空白字符
         var preview = text.Replace("\r\n", " ").Replace("\n", " ").Replace("\t", " ");
         while (preview.Contains("  "))
         {
