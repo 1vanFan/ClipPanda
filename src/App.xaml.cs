@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Runtime.InteropServices;
 using ClipPanda.Services;
 using ClipPanda.Views;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -19,8 +20,31 @@ public partial class App : Application
     private MainWindow? _mainWindow;
     private TaskbarIcon? _taskbarIcon;
 
+    // 单实例互斥锁
+    private static Mutex? _mutex;
+    private const string MutexName = "ClipPanda_SingleInstance_Mutex";
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    private const int SW_RESTORE = 9;
+
     protected override void OnStartup(System.Windows.StartupEventArgs e)
     {
+        // 检查是否已有实例在运行
+        _mutex = new Mutex(true, MutexName, out bool createdNew);
+
+        if (!createdNew)
+        {
+            // 已有实例在运行，激活它并退出
+            ActivateExistingInstance();
+            Shutdown();
+            return;
+        }
+
         base.OnStartup(e);
 
         try
@@ -73,6 +97,25 @@ public partial class App : Application
             System.Diagnostics.Debug.WriteLine($"[ClipPanda] 启动错误: {ex}");
             MessageBox.Show($"应用程序启动失败:\n{ex.Message}\n\n{ex.StackTrace}",
                 "ClipPanda 错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+    }
+
+    /// <summary>
+    /// 激活已存在的实例窗口
+    /// </summary>
+    private void ActivateExistingInstance()
+    {
+        // 查找已存在的窗口
+        var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+        foreach (var process in System.Diagnostics.Process.GetProcessesByName(currentProcess.ProcessName))
+        {
+            if (process.Id != currentProcess.Id)
+            {
+                // 激活窗口
+                ShowWindow(process.MainWindowHandle, SW_RESTORE);
+                SetForegroundWindow(process.MainWindowHandle);
+                break;
+            }
         }
     }
 
@@ -234,6 +277,8 @@ public partial class App : Application
         _hotkeyService?.Dispose();
         _databaseService?.Dispose();
         _taskbarIcon?.Dispose();
+        _mutex?.ReleaseMutex();
+        _mutex?.Dispose();
 
         base.OnExit(e);
     }

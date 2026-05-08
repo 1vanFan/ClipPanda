@@ -91,7 +91,8 @@
                                            Foreground="{StaticResource TextPrimaryBrush}"
                                            VerticalAlignment="Center"/>
                                 <ComboBox Grid.Column="1"
-                                          SelectedValue="{Binding MaxHistoryCount}"
+                                          SelectedValue="{Binding MaxHistoryCount, Mode=TwoWay}"
+                                          SelectedValuePath="Tag"
                                           Width="120" Height="30" FontSize="13"
                                           VerticalContentAlignment="Center">
                                     <ComboBoxItem Content="100" Tag="100"/>
@@ -109,7 +110,8 @@
                                            Foreground="{StaticResource TextPrimaryBrush}"
                                            VerticalAlignment="Center"/>
                                 <ComboBox Grid.Column="1"
-                                          SelectedValue="{Binding HistoryRetentionDays}"
+                                          SelectedValue="{Binding HistoryRetentionDays, Mode=TwoWay}"
+                                          SelectedValuePath="Tag"
                                           Width="120" Height="30" FontSize="13"
                                           VerticalContentAlignment="Center">
                                     <ComboBoxItem Content="3 天" Tag="3"/>
