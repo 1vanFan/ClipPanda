@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Threading;
 using MessageBox = System.Windows.MessageBox;
+using Application = System.Windows.Application;
 
 namespace ClipPanda.Services;
 
