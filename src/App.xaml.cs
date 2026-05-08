@@ -159,7 +159,10 @@ public partial class App : Application
     /// </summary>
     private void CreateTaskbarIcon()
     {
-        var icon = CreateSimpleIcon();
+        // 使用项目自带的 logo 图标文件
+        var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "icon.ico");
+        var icon = System.Drawing.Icon.ExtractAssociatedIcon(iconPath)
+                   ?? CreateFallbackIcon();
 
         _taskbarIcon = new TaskbarIcon
         {
@@ -211,9 +214,9 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// 创建简单的图标 - 熊猫剪贴板
+    /// 备用图标 - 当 icon.ico 文件不存在时使用
     /// </summary>
-    private Icon CreateSimpleIcon()
+    private Icon CreateFallbackIcon()
     {
         using var bitmap = new Bitmap(32, 32);
         using var graphics = Graphics.FromImage(bitmap);
