@@ -134,7 +134,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// 在主屏幕中央显示（Raycast风格）
+    /// 在主屏幕中央偏上显示（Raycast风格）
     /// </summary>
     private void CenterWindowOnPrimaryScreen()
     {
@@ -143,12 +143,13 @@ public partial class MainWindow : Window
         {
             var workingArea = primaryScreen.WorkingArea;
             Left = (workingArea.Width - Width) / 2 + workingArea.Left;
-            Top = (workingArea.Height - Height) / 2 + workingArea.Top;
+            // 居中偏上：屏幕高度的 30% 位置
+            Top = workingArea.Height * 0.3 - Height / 2 + workingArea.Top;
         }
     }
 
     /// <summary>
-    /// 在当前鼠标所在的屏幕中央显示
+    /// 在当前鼠标所在的屏幕中央偏上显示（Raycast风格）
     /// </summary>
     private void CenterWindowOnCurrentScreen()
     {
@@ -157,7 +158,8 @@ public partial class MainWindow : Window
         {
             var workingArea = currentScreen.WorkingArea;
             Left = (workingArea.Width - Width) / 2 + workingArea.Left;
-            Top = (workingArea.Height - Height) / 2 + workingArea.Top;
+            // 居中偏上：屏幕高度的 30% 位置
+            Top = workingArea.Height * 0.3 - Height / 2 + workingArea.Top;
         }
     }
 

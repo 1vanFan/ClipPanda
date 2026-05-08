@@ -61,9 +61,10 @@ public partial class App : Application
             _settingsService = new SettingsService();
             LogService.Info("设置服务初始化完成");
 
-            // 应用主题
-            ThemeService.ApplyTheme(_settingsService.Settings.ThemeColor);
-            LogService.Info($"主题应用: {_settingsService.Settings.ThemeColor}");
+            // 应用主题（使用深色模式设置）
+            var useDarkMode = _settingsService.Settings.UseDarkMode;
+            ThemeService.ApplyTheme("Blue", useDarkMode);
+            LogService.Info($"主题应用: Blue, 深色模式: {useDarkMode?.ToString() ?? "跟随系统"}");
 
             // 初始化数据库
             _databaseService = new DatabaseService();

@@ -108,6 +108,66 @@ public class DatabaseService : IDisposable
     }
 
     /// <summary>
+    /// 按内容类型获取条目
+    /// </summary>
+    public async Task<List<ClipboardItem>> GetItemsByTypeAsync(ContentType? contentType, int limit = 100)
+    {
+        var query = _context.ClipboardItems.AsQueryable();
+        
+        if (contentType.HasValue)
+        {
+            query = query.Where(i => i.ContentType == contentType.Value);
+        }
+        
+        return await query
+            .OrderByDescending(i => i.CopyTime)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// 按内容类型搜索条目
+    /// </summary>
+    public async Task<List<ClipboardItem>> SearchItemsByTypeAsync(string keyword, ContentType? contentType, int limit = 100)
+    {
+        var query = _context.ClipboardItems.AsQueryable();
+        
+        if (contentType.HasValue)
+        {
+            query = query.Where(i => i.ContentType == contentType.Value);
+        }
+        
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            var lowerKeyword = keyword.ToLower();
+            query = query.Where(i => i.Preview != null && i.Preview.ToLower().Contains(lowerKeyword));
+        }
+        
+        return await query
+            .OrderByDescending(i => i.CopyTime)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// 按内容类型获取收藏条目
+    /// </summary>
+    public async Task<List<ClipboardItem>> GetFavoriteItemsByTypeAsync(ContentType? contentType, int limit = 100)
+    {
+        var query = _context.ClipboardItems.Where(i => i.IsFavorited);
+        
+        if (contentType.HasValue)
+        {
+            query = query.Where(i => i.ContentType == contentType.Value);
+        }
+        
+        return await query
+            .OrderByDescending(i => i.CopyTime)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    /// <summary>
     /// 搜索收藏条目
     /// </summary>
     public async Task<List<ClipboardItem>> SearchFavoriteItemsAsync(string keyword, int limit = 100)

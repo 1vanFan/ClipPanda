@@ -10,6 +10,26 @@ using ClipPanda.Services;
 namespace ClipPanda.ViewModels;
 
 /// <summary>
+/// 内容类型筛选选项
+/// </summary>
+public class ContentTypeFilter
+{
+    public ContentType? Type { get; set; }
+    public string DisplayName { get; set; } = "";
+    public string Icon { get; set; } = "";
+    
+    public static readonly List<ContentTypeFilter> AllFilters = new()
+    {
+        new ContentTypeFilter { Type = null, DisplayName = "全部类型", Icon = "📋" },
+        new ContentTypeFilter { Type = ContentType.Text, DisplayName = "文本", Icon = "📝" },
+        new ContentTypeFilter { Type = ContentType.Image, DisplayName = "图片", Icon = "🖼️" },
+        new ContentTypeFilter { Type = ContentType.Html, DisplayName = "HTML", Icon = "🌐" },
+        new ContentTypeFilter { Type = ContentType.Files, DisplayName = "文件", Icon = "📁" },
+        new ContentTypeFilter { Type = ContentType.Rtf, DisplayName = "富文本", Icon = "📄" },
+    };
+}
+
+/// <summary>
 /// 剪贴板条目视图模型
 /// </summary>
 public class ClipboardItemViewModel : INotifyPropertyChanged
@@ -128,12 +148,20 @@ public class MainViewModel : INotifyPropertyChanged
     private string _searchText = string.Empty;
     private string _statusText = "就绪";
     private bool _showFavoritesOnly;
+    private ContentType? _selectedContentType;
+    private int _selectedContentTypeIndex = 0;
 
     public MainViewModel(DatabaseService databaseService)
     {
         _databaseService = databaseService;
+        ContentTypeFilters = ContentTypeFilter.AllFilters;
         _ = LoadItemsAsync();
     }
+
+    /// <summary>
+    /// 内容类型筛选列表
+    /// </summary>
+    public List<ContentTypeFilter> ContentTypeFilters { get; }
 
     public ObservableCollection<ClipboardItemViewModel> ClipboardItems
     {
@@ -189,6 +217,39 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// 选中的内容类型（null 表示全部）
+    /// </summary>
+    public ContentType? SelectedContentType
+    {
+        get => _selectedContentType;
+        set
+        {
+            _selectedContentType = value;
+            OnPropertyChanged();
+            _ = LoadItemsAsync();
+        }
+    }
+
+    /// <summary>
+    /// 选中的内容类型索引（用于 UI 绑定）
+    /// </summary>
+    public int SelectedContentTypeIndex
+    {
+        get => _selectedContentTypeIndex;
+        set
+        {
+            if (_selectedContentTypeIndex != value && value >= 0 && value < ContentTypeFilters.Count)
+            {
+                _selectedContentTypeIndex = value;
+                _selectedContentType = ContentTypeFilters[value].Type;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(SelectedContentType));
+                _ = LoadItemsAsync();
+            }
+        }
+    }
+
     public async Task LoadItemsAsync()
     {
         List<ClipboardItem> items;
@@ -196,33 +257,28 @@ public class MainViewModel : INotifyPropertyChanged
         if (_showFavoritesOnly)
         {
             // 仅显示收藏
-            if (string.IsNullOrWhiteSpace(SearchText))
+            items = await _databaseService.GetFavoriteItemsByTypeAsync(_selectedContentType, 100);
+            
+            if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                items = await _databaseService.GetFavoriteItemsAsync(100);
-            }
-            else
-            {
-                items = await _databaseService.SearchFavoriteItemsAsync(SearchText, 100);
+                var lowerKeyword = SearchText.ToLower();
+                items = items.Where(i => i.Preview != null && i.Preview.ToLower().Contains(lowerKeyword)).ToList();
             }
         }
         else
         {
-            // 显示全部
-            if (string.IsNullOrWhiteSpace(SearchText))
-            {
-                items = await _databaseService.GetAllItemsAsync(100);
-            }
-            else
-            {
-                items = await _databaseService.SearchItemsAsync(SearchText, 100);
-            }
+            // 显示全部（支持类型筛选）
+            items = await _databaseService.SearchItemsByTypeAsync(SearchText, _selectedContentType, 100);
         }
 
         ClipboardItems = new ObservableCollection<ClipboardItemViewModel>(
             items.Select(i => new ClipboardItemViewModel(i)));
 
+        var typeLabel = _selectedContentType.HasValue
+            ? ContentTypeFilters.FirstOrDefault(f => f.Type == _selectedContentType)?.DisplayName ?? "全部"
+            : "全部类型";
         var tabLabel = _showFavoritesOnly ? "收藏" : "全部";
-        StatusText = $"{tabLabel} - 共 {ClipboardItems.Count} 条记录";
+        StatusText = $"{tabLabel} · {typeLabel} - 共 {ClipboardItems.Count} 条";
 
         // 更新空状态显示
         OnPropertyChanged(nameof(IsEmpty));
@@ -238,7 +294,17 @@ public class MainViewModel : INotifyPropertyChanged
     /// <summary>
     /// 空状态标题
     /// </summary>
-    public string EmptyStateTitle => _showFavoritesOnly ? "暂无收藏" : "暂无历史记录";
+    public string EmptyStateTitle
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(SearchText))
+                return "未找到匹配内容";
+            if (_selectedContentType.HasValue)
+                return $"暂无{ContentTypeFilters.FirstOrDefault(f => f.Type == _selectedContentType)?.DisplayName ?? ""}记录";
+            return _showFavoritesOnly ? "暂无收藏" : "暂无历史记录";
+        }
+    }
 
     /// <summary>
     /// 空状态描述
@@ -248,7 +314,7 @@ public class MainViewModel : INotifyPropertyChanged
         get
         {
             if (!string.IsNullOrWhiteSpace(SearchText))
-                return "未找到匹配的内容，请尝试其他关键词";
+                return "请尝试其他关键词";
             return _showFavoritesOnly
                 ? "点击收藏按钮将常用内容添加到此处"
                 : "复制任意内容后将自动出现在这里";

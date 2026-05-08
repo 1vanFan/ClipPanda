@@ -88,20 +88,46 @@
                 </Grid>
             </Border>
 
-            <!-- Tab 切换栏 -->
+            <!-- Tab 切换栏 + 类型筛选 -->
             <Border Grid.Row="2" Margin="12,8,12,0" Padding="4">
-                <StackPanel Orientation="Horizontal">
-                    <RadioButton Content="全部"
-                                 Style="{StaticResource TabButtonStyle}"
-                                 IsChecked="{Binding ShowFavoritesOnly, Converter={StaticResource InvertBoolConverter}, Mode=OneWay}"
-                                 GroupName="TabGroup"
-                                 Click="AllTab_Click"/>
-                    <RadioButton Content="收藏"
-                                 Style="{StaticResource TabButtonStyle}"
-                                 IsChecked="{Binding ShowFavoritesOnly, Mode=OneWay}"
-                                 GroupName="TabGroup"
-                                 Click="FavoritesTab_Click"/>
-                </StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <RadioButton Content="全部"
+                                     Style="{StaticResource TabButtonStyle}"
+                                     IsChecked="{Binding ShowFavoritesOnly, Converter={StaticResource InvertBoolConverter}, Mode=OneWay}"
+                                     GroupName="TabGroup"
+                                     Click="AllTab_Click"/>
+                        <RadioButton Content="收藏"
+                                     Style="{StaticResource TabButtonStyle}"
+                                     IsChecked="{Binding ShowFavoritesOnly, Mode=OneWay}"
+                                     GroupName="TabGroup"
+                                     Click="FavoritesTab_Click"/>
+                    </StackPanel>
+                    
+                    <!-- 类型筛选下拉框 -->
+                    <ComboBox Grid.Column="2"
+                              Width="100"
+                              Height="28"
+                              ItemsSource="{Binding ContentTypeFilters}"
+                              SelectedIndex="{Binding SelectedContentTypeIndex, Mode=TwoWay}"
+                              VerticalContentAlignment="Center"
+                              FontSize="12">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Icon}" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
             </Border>
 
             <!-- 列表区域 -->
