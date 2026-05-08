@@ -47,42 +47,51 @@ public partial class App : Application
 
         base.OnStartup(e);
 
+        // 初始化日志系统
+        LogService.Initialize();
+
+        // 初始化全局异常处理
+        ExceptionHandler.Initialize();
+
         try
         {
-            System.Diagnostics.Debug.WriteLine("[ClipPanda] 应用程序启动中...");
+            LogService.Info("应用程序启动中...");
 
             // 初始化设置服务
             _settingsService = new SettingsService();
+            LogService.Info("设置服务初始化完成");
 
             // 应用主题
             ThemeService.ApplyTheme(_settingsService.Settings.ThemeColor);
+            LogService.Info($"主题应用: {_settingsService.Settings.ThemeColor}");
 
             // 初始化数据库
             _databaseService = new DatabaseService();
+            LogService.Info("数据库服务初始化完成");
 
             // 初始化快捷键服务
             _hotkeyService = new HotkeyService();
             _hotkeyService.Initialize();
+            LogService.Info("快捷键服务初始化完成");
 
             // 初始化剪贴板监听
             _clipboardMonitor = new ClipboardMonitorService(
                 _databaseService,
                 enableDeduplication: _settingsService.Settings.EnableAutoDeduplication);
             _clipboardMonitor.Start();
+            LogService.Info("剪贴板监听服务启动完成");
 
             // 订阅错误事件
             _clipboardMonitor.ErrorOccurred += OnServiceError;
             _hotkeyService.ErrorOccurred += OnServiceError;
 
-            System.Diagnostics.Debug.WriteLine("[ClipPanda] 服务初始化完成");
-
             // 创建主窗口（初始不显示）
             _mainWindow = new MainWindow(_databaseService, _clipboardMonitor, _hotkeyService, _settingsService);
-            System.Diagnostics.Debug.WriteLine("[ClipPanda] 主窗口创建完成");
+            LogService.Info("主窗口创建完成");
 
             // 创建系统托盘图标
             CreateTaskbarIcon();
-            System.Diagnostics.Debug.WriteLine("[ClipPanda] 系统托盘图标创建完成");
+            LogService.Info("系统托盘图标创建完成");
 
             // 注册主快捷键
             RegisterMainHotkey();
@@ -90,12 +99,12 @@ public partial class App : Application
             // 启动时清理过期记录
             _ = CleanupExpiredItemsAsync();
 
-            System.Diagnostics.Debug.WriteLine("[ClipPanda] 应用程序启动完成");
+            LogService.Info("应用程序启动完成");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[ClipPanda] 启动错误: {ex}");
-            MessageBox.Show($"应用程序启动失败:\n{ex.Message}\n\n{ex.StackTrace}",
+            LogService.Fatal(ex, "应用程序启动失败");
+            MessageBox.Show($"应用程序启动失败:\n{ex.Message}\n\n日志位置: {LogService.GetLogDirectory()}",
                 "ClipPanda 错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
     }
@@ -135,12 +144,13 @@ public partial class App : Application
 
         if (!hotkeyRegistered)
         {
+            LogService.Warning($"无法注册快捷键 {hotkey}");
             MessageBox.Show($"无法注册快捷键 {hotkey}，可能已被其他程序占用。\n请在设置中更改快捷键。",
                 "ClipPanda", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
         }
         else
         {
-            System.Diagnostics.Debug.WriteLine($"[ClipPanda] 快捷键 {hotkey} 注册成功");
+            LogService.Info($"快捷键 {hotkey} 注册成功");
         }
     }
 
@@ -252,10 +262,17 @@ public partial class App : Application
     {
         if (_databaseService != null && _settingsService != null)
         {
-            var count = await _databaseService.CleanupExpiredItemsAsync(_settingsService.Settings.HistoryRetentionDays);
-            if (count > 0)
+            try
             {
-                System.Diagnostics.Debug.WriteLine($"已清理 {count} 条过期记录");
+                var count = await _databaseService.CleanupExpiredItemsAsync(_settingsService.Settings.HistoryRetentionDays);
+                if (count > 0)
+                {
+                    LogService.Info($"已清理 {count} 条过期记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Error(ex, "清理过期记录失败");
             }
         }
     }
@@ -265,14 +282,17 @@ public partial class App : Application
     /// </summary>
     private void OnServiceError(Exception ex)
     {
+        LogService.Error(ex, "服务错误");
         Dispatcher.Invoke(() =>
         {
-            System.Diagnostics.Debug.WriteLine($"服务错误: {ex.Message}");
+            // 可选：显示托盘通知
         });
     }
 
     protected override void OnExit(System.Windows.ExitEventArgs e)
     {
+        LogService.Info("应用程序正在退出...");
+
         _clipboardMonitor?.Dispose();
         _hotkeyService?.Dispose();
         _databaseService?.Dispose();
@@ -280,6 +300,7 @@ public partial class App : Application
         _mutex?.ReleaseMutex();
         _mutex?.Dispose();
 
+        LogService.Info("应用程序已退出");
         base.OnExit(e);
     }
 }

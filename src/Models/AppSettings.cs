@@ -74,4 +74,9 @@ public class AppSettings
     /// 主题配色（Blue, Green, Purple, Orange, Pink）
     /// </summary>
     public string ThemeColor { get; set; } = "Blue";
+
+    /// <summary>
+    /// 是否使用深色模式（null表示跟随系统）
+    /// </summary>
+    public bool? UseDarkMode { get; set; } = null;
 }

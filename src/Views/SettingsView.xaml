@@ -129,7 +129,7 @@
                                Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8"/>
                     <Border Style="{StaticResource CardStyle}" Padding="12" Margin="0,0,0,16">
                         <StackPanel>
-                            <Grid>
+                            <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
@@ -159,6 +159,27 @@
                                                  IsChecked="{Binding IsPinkTheme}"
                                                  Background="#C30052"/>
                                 </StackPanel>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="深色模式" FontSize="13"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="切换深色/浅色外观" FontSize="11"
+                                               Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="1"
+                                          SelectedValue="{Binding DarkModeOption, Mode=TwoWay}"
+                                          SelectedValuePath="Tag"
+                                          Width="120" Height="30" FontSize="13"
+                                          VerticalContentAlignment="Center">
+                                    <ComboBoxItem Content="跟随系统" Tag="Auto"/>
+                                    <ComboBoxItem Content="浅色" Tag="Light"/>
+                                    <ComboBoxItem Content="深色" Tag="Dark"/>
+                                </ComboBox>
                             </Grid>
                         </StackPanel>
                     </Border>

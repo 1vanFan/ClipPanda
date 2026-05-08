@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppName" xml:space="preserve">
+    <value>ClipPanda</value>
+  </data>
+  <data name="AppDescription" xml:space="preserve">
+    <value>Clipboard Manager</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>Search clipboard history...</value>
+  </data>
+  <data name="TabAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="TabFavorites" xml:space="preserve">
+    <value>Favorites</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="HotkeySetting" xml:space="preserve">
+    <value>Hotkey</value>
+  </data>
+  <data name="MainHotkey" xml:space="preserve">
+    <value>Main Hotkey</value>
+  </data>
+  <data name="HotkeyTip" xml:space="preserve">
+    <value>Click the input box and press key combination to change</value>
+  </data>
+  <data name="HistorySettings" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="MaxHistoryCount" xml:space="preserve">
+    <value>Max Records</value>
+  </data>
+  <data name="RetentionDays" xml:space="preserve">
+    <value>Retention Days</value>
+  </data>
+  <data name="Days" xml:space="preserve">
+    <value>days</value>
+  </data>
+  <data name="Forever" xml:space="preserve">
+    <value>Forever</value>
+  </data>
+  <data name="Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="ThemeColor" xml:space="preserve">
+    <value>Theme Color</value>
+  </data>
+  <data name="DarkMode" xml:space="preserve">
+    <value>Dark Mode</value>
+  </data>
+  <data name="DarkModeAuto" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="DarkModeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="DarkModeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Features" xml:space="preserve">
+    <value>Features</value>
+  </data>
+  <data name="StartWithWindows" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+  <data name="StartWithWindowsDesc" xml:space="preserve">
+    <value>Automatically run ClipPanda when system starts</value>
+  </data>
+  <data name="AutoDeduplication" xml:space="preserve">
+    <value>Auto Deduplication</value>
+  </data>
+  <data name="AutoDeduplicationDesc" xml:space="preserve">
+    <value>Update timestamp when copying same content</value>
+  </data>
+  <data name="MinimizeToTray" xml:space="preserve">
+    <value>Minimize to Tray</value>
+  </data>
+  <data name="MinimizeToTrayDesc" xml:space="preserve">
+    <value>Minimize to system tray when closing window</value>
+  </data>
+  <data name="CopyNotification" xml:space="preserve">
+    <value>Copy Notification</value>
+  </data>
+  <data name="CopyNotificationDesc" xml:space="preserve">
+    <value>Show notification when copying content</value>
+  </data>
+  <data name="SaveSettings" xml:space="preserve">
+    <value>Save Settings</value>
+  </data>
+  <data name="SettingsSaved" xml:space="preserve">
+    <value>Settings Saved</value>
+  </data>
+  <data name="TrayOpen" xml:space="preserve">
+    <value>Open Main Window</value>
+  </data>
+  <data name="TraySettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="TrayExit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="EmptyStateAll" xml:space="preserve">
+    <value>No History</value>
+  </data>
+  <data name="EmptyStateFavorites" xml:space="preserve">
+    <value>No Favorites</value>
+  </data>
+  <data name="EmptyStateSearch" xml:space="preserve">
+    <value>No matching content found, try different keywords</value>
+  </data>
+  <data name="EmptyStateAllDesc" xml:space="preserve">
+    <value>Copied content will appear here automatically</value>
+  </data>
+  <data name="EmptyStateFavoritesDesc" xml:space="preserve">
+    <value>Click the favorite button to add frequently used content here</value>
+  </data>
+  <data name="StatusReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="StatusRecords" xml:space="preserve">
+    <value>{0} records</value>
+  </data>
+  <data name="ShortcutHint" xml:space="preserve">
+    <value>Ctrl+Shift+C Toggle | Enter Paste | Ctrl+S Favorite | Del Delete</value>
+  </data>
+  <data name="ErrorHotkey" xml:space="preserve">
+    <value>Cannot register hotkey {0}, may be occupied by another program.</value>
+  </data>
+  <data name="ErrorStartup" xml:space="preserve">
+    <value>Application startup failed</value>
+  </data>
+  <data name="JustNow" xml:space="preserve">
+    <value>Just now</value>
+  </data>
+  <data name="MinutesAgo" xml:space="preserve">
+    <value>{0} minutes ago</value>
+  </data>
+  <data name="HoursAgo" xml:space="preserve">
+    <value>{0} hours ago</value>
+  </data>
+  <data name="DaysAgo" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="ContentImage" xml:space="preserve">
+    <value>[Image]</value>
+  </data>
+  <data name="ContentFiles" xml:space="preserve">
+    <value>[Files]</value>
+  </data>
+  <data name="ContentHtml" xml:space="preserve">
+    <value>[HTML]</value>
+  </data>
+  <data name="ContentRtf" xml:space="preserve">
+    <value>[Rich Text]</value>
+  </data>
+  <data name="ContentEmpty" xml:space="preserve">
+    <value>[Empty]</value>
+  </data>
+</root>

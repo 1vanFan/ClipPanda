@@ -30,6 +30,12 @@ public class SettingsViewModel : INotifyPropertyChanged
         MinimizeToTray = s.MinimizeToTray;
         ShowCopyNotification = s.ShowCopyNotification;
         ThemeColor = s.ThemeColor;
+        DarkModeOption = s.UseDarkMode switch
+        {
+            true => "Dark",
+            false => "Light",
+            _ => "Auto"
+        };
     }
 
     private int _maxHistoryCount;
@@ -135,6 +141,17 @@ public class SettingsViewModel : INotifyPropertyChanged
         set { if (value) ThemeColor = "Pink"; }
     }
 
+    private string _darkModeOption = "Auto";
+    public string DarkModeOption
+    {
+        get => _darkModeOption;
+        set
+        {
+            _darkModeOption = value;
+            OnPropertyChanged();
+        }
+    }
+
     /// <summary>
     /// 保存设置
     /// </summary>
@@ -151,10 +168,22 @@ public class SettingsViewModel : INotifyPropertyChanged
             s.MinimizeToTray = MinimizeToTray;
             s.ShowCopyNotification = ShowCopyNotification;
             s.ThemeColor = ThemeColor;
+            s.UseDarkMode = DarkModeOption switch
+            {
+                "Dark" => true,
+                "Light" => false,
+                _ => null
+            };
         });
 
         // 应用主题
-        ThemeService.ApplyTheme(ThemeColor);
+        bool? useDarkMode = DarkModeOption switch
+        {
+            "Dark" => true,
+            "Light" => false,
+            _ => null
+        };
+        ThemeService.ApplyTheme(ThemeColor, useDarkMode);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using ClipPanda.Models;
 using ClipPanda.Services;
 
@@ -70,6 +72,42 @@ public class ClipboardItemViewModel : INotifyPropertyChanged
     public Visibility FavoriteVisibility => _item.IsFavorited
         ? Visibility.Visible
         : Visibility.Collapsed;
+
+    /// <summary>
+    /// 是否为图片类型
+    /// </summary>
+    public bool IsImage => _item.ContentType == ContentType.Image;
+
+    /// <summary>
+    /// 图片缩略图（如果是图片类型）
+    /// </summary>
+    public BitmapImage? ThumbnailImage
+    {
+        get
+        {
+            if (_item.ContentType != ContentType.Image || _item.BinaryContent == null)
+                return null;
+
+            try
+            {
+                var bitmap = new BitmapImage();
+                using (var stream = new MemoryStream(_item.BinaryContent))
+                {
+                    bitmap.BeginInit();
+                    bitmap.StreamSource = stream;
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.DecodePixelWidth = 64; // 限制解码尺寸
+                    bitmap.EndInit();
+                }
+                bitmap.Freeze(); // 冻结以提高性能
+                return bitmap;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -185,6 +223,36 @@ public class MainViewModel : INotifyPropertyChanged
 
         var tabLabel = _showFavoritesOnly ? "收藏" : "全部";
         StatusText = $"{tabLabel} - 共 {ClipboardItems.Count} 条记录";
+
+        // 更新空状态显示
+        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(EmptyStateTitle));
+        OnPropertyChanged(nameof(EmptyStateDescription));
+    }
+
+    /// <summary>
+    /// 是否为空状态
+    /// </summary>
+    public bool IsEmpty => ClipboardItems.Count == 0;
+
+    /// <summary>
+    /// 空状态标题
+    /// </summary>
+    public string EmptyStateTitle => _showFavoritesOnly ? "暂无收藏" : "暂无历史记录";
+
+    /// <summary>
+    /// 空状态描述
+    /// </summary>
+    public string EmptyStateDescription
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(SearchText))
+                return "未找到匹配的内容，请尝试其他关键词";
+            return _showFavoritesOnly
+                ? "点击收藏按钮将常用内容添加到此处"
+                : "复制任意内容后将自动出现在这里";
+        }
     }
 
     public void RefreshItems()

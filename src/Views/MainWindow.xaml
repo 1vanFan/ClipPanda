@@ -105,14 +105,40 @@
 
             <!-- 列表区域 -->
             <Border Grid.Row="3" Margin="12,8,12,0" Style="{StaticResource CardStyle}">
-                <ListBox x:Name="ClipboardListBox"
-                         ItemsSource="{Binding ClipboardItems}"
-                         SelectedItem="{Binding SelectedItem}"
-                         ItemContainerStyle="{StaticResource ClipboardItemStyle}"
-                         BorderThickness="0"
-                         Background="Transparent"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         MouseDoubleClick="ClipboardListBox_OnMouseDoubleClick">
+                <Grid>
+                    <!-- 空状态 -->
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                Visibility="{Binding IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Path Data="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10-4.48 10-10S17.52,2 12,2zm-2,15l-5-5 1.41-1.41L10,14.17l7.59-7.59L19,8l-9,9z"
+                              Fill="{StaticResource TextMutedBrush}" 
+                              Width="48" Height="48" 
+                              Stretch="Uniform"
+                              Opacity="0.5"/>
+                        <TextBlock Text="{Binding EmptyStateTitle}"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,16,0,8"/>
+                        <TextBlock Text="{Binding EmptyStateDescription}"
+                                   FontSize="13"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   HorizontalAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="280"
+                                   TextAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <!-- 列表 -->
+                    <ListBox x:Name="ClipboardListBox"
+                             ItemsSource="{Binding ClipboardItems}"
+                             SelectedItem="{Binding SelectedItem}"
+                             ItemContainerStyle="{StaticResource ClipboardItemStyle}"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             MouseDoubleClick="ClipboardListBox_OnMouseDoubleClick"
+                             Visibility="{Binding IsEmpty, Converter={StaticResource InvertBoolConverter}}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="0,4">
@@ -122,12 +148,13 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- 类型图标（正方形） -->
+                                <!-- 类型图标或图片缩略图 -->
                                 <Border Grid.Column="0"
                                         Width="32" Height="32"
                                         CornerRadius="6"
                                         Background="{Binding ContentTypeColor}"
-                                        Margin="0,0,12,0">
+                                        Margin="0,0,12,0"
+                                        Visibility="{Binding IsImage, Converter={StaticResource InvertBoolConverter}}">
                                     <TextBlock Text="{Binding ContentTypeIcon}"
                                                FontSize="11"
                                                FontWeight="SemiBold"
@@ -135,6 +162,13 @@
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"/>
                                 </Border>
+                                <Image Grid.Column="0"
+                                       Width="32" Height="32"
+                                       Source="{Binding ThumbnailImage}"
+                                       Stretch="UniformToFill"
+                                       Margin="0,0,12,0"
+                                       Visibility="{Binding IsImage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       RenderOptions.BitmapScalingMode="HighQuality"/>
 
                                 <!-- 内容预览 -->
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -162,6 +196,7 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+                </Grid>
             </Border>
 
             <!-- 底部状态栏 -->

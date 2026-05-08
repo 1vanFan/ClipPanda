@@ -9,6 +9,7 @@
                 <ResourceDictionary Source="/Assets/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <local:InvertBoolConverter x:Key="InvertBoolConverter"/>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
