@@ -7,6 +7,9 @@ on:
     types: [ created ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -37,6 +40,9 @@ jobs:
       working-directory: ./src
       run: |
         dotnet publish ClipPanda.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ../publish
+        # 复制 Assets 目录到发布目录
+        mkdir -p ../publish/Assets
+        cp -r Assets/* ../publish/Assets/
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
