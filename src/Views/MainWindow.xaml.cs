@@ -142,9 +142,16 @@ public partial class MainWindow : Window
         if (primaryScreen != null)
         {
             var workingArea = primaryScreen.WorkingArea;
-            Left = (workingArea.Width - Width) / 2 + workingArea.Left;
-            // 居中偏上：屏幕高度的 30% 位置
-            Top = workingArea.Height * 0.3 - Height / 2 + workingArea.Top;
+            // 使用实际窗口尺寸（如果未加载则使用设计尺寸）
+            var windowWidth = ActualWidth > 0 ? ActualWidth : Width;
+            
+            // 计算居中位置
+            Left = workingArea.Left + (workingArea.Width - windowWidth) / 2;
+            // 偏上显示：workingArea 顶部往下 15% 的位置
+            Top = workingArea.Top + workingArea.Height * 0.15;
+            
+            // 确保窗口在屏幕范围内
+            EnsureWindowVisible(primaryScreen);
         }
     }
 
@@ -157,9 +164,16 @@ public partial class MainWindow : Window
         if (currentScreen != null)
         {
             var workingArea = currentScreen.WorkingArea;
-            Left = (workingArea.Width - Width) / 2 + workingArea.Left;
-            // 居中偏上：屏幕高度的 30% 位置
-            Top = workingArea.Height * 0.3 - Height / 2 + workingArea.Top;
+            // 使用实际窗口尺寸
+            var windowWidth = ActualWidth > 0 ? ActualWidth : Width;
+            
+            // 计算居中位置
+            Left = workingArea.Left + (workingArea.Width - windowWidth) / 2;
+            // 偏上显示
+            Top = workingArea.Top + workingArea.Height * 0.15;
+            
+            // 确保窗口在屏幕范围内
+            EnsureWindowVisible(currentScreen);
         }
     }
 

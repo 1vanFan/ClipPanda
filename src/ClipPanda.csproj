@@ -9,7 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>ClipPanda</AssemblyName>
     <RootNamespace>ClipPanda</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>ClipMaster Team</Authors>
     <Description>A modern clipboard manager for Windows 11</Description>
     <Copyright>Copyright © 2024</Copyright>
@@ -26,9 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Assets\**\*">
+    <Content Include="Assets\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
