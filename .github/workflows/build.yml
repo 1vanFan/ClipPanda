@@ -3,10 +3,12 @@ name: Build and Release
 on:
   push:
     branches: [ main ]
+  release:
+    types: [ created, published ]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   actions: write
 
 jobs:
@@ -43,6 +45,8 @@ jobs:
         # 复制 Assets 目录到发布目录
         if (!(Test-Path ../publish/Assets)) { New-Item -ItemType Directory -Path ../publish/Assets }
         Copy-Item -Path Assets/* -Destination ../publish/Assets/ -Recurse -Force
+        # 列出发布目录内容
+        Get-ChildItem ../publish/
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -57,3 +61,14 @@ jobs:
         name: ClipPanda-Win64
         path: ./publish/ClipPanda.exe
         retention-days: 30
+    
+    - name: Upload exe to Release
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./publish/ClipPanda.exe
+        asset_name: ClipPanda.exe
+        asset_content_type: application/vnd.microsoft.portable-executable
