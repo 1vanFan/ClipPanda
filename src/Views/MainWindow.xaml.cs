@@ -8,6 +8,7 @@ using TextChangedEventArgs = System.Windows.Controls.TextChangedEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using Clipboard = System.Windows.Clipboard;
 using FormsScreen = System.Windows.Forms.Screen;
+using Point = System.Windows.Point;
 
 namespace ClipPanda.Views;
 
