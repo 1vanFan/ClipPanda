@@ -313,7 +313,7 @@ public partial class App : Application
 
         _clipboardMonitor?.Dispose();
         _hotkeyService?.Dispose();
-        _databaseService?.Dispose();
+        // DatabaseService 不再需要 Dispose，每次操作都创建新的 DbContext
         _taskbarIcon?.Dispose();
         _mutex?.ReleaseMutex();
         _mutex?.Dispose();
