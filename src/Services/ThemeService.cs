@@ -1,6 +1,4 @@
 using Application = System.Windows.Application;
-using Color = System.Windows.Media.Color;
-using ColorConverter = System.Windows.Media.ColorConverter;
 
 namespace ClipPanda.Services;
 
@@ -69,16 +67,20 @@ public static class ThemeService
 
         var resources = Application.Current.Resources;
 
+        var primaryColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(theme.Primary);
+        var accentColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(theme.Accent);
+        var lightColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(theme.Light);
+
         // 更新颜色资源
-        resources["PrimaryColor"] = (Color)ColorConverter.ConvertFromString(theme.Primary);
-        resources["AccentColor"] = (Color)ColorConverter.ConvertFromString(theme.Accent);
+        resources["PrimaryColor"] = primaryColor;
+        resources["AccentColor"] = accentColor;
 
         // 更新画刷
-        resources["PrimaryBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(theme.Primary));
-        resources["AccentBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(theme.Accent));
+        resources["PrimaryBrush"] = new System.Windows.Media.SolidColorBrush(primaryColor);
+        resources["AccentBrush"] = new System.Windows.Media.SolidColorBrush(accentColor);
 
         // 更新选中项背景色
-        resources["SelectedItemBackground"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(theme.Light));
+        resources["SelectedItemBackground"] = new System.Windows.Media.SolidColorBrush(lightColor);
     }
 
     /// <summary>
