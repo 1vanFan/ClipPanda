@@ -7,6 +7,7 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using TextChangedEventArgs = System.Windows.Controls.TextChangedEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using Clipboard = System.Windows.Clipboard;
+using FormsScreen = System.Windows.Forms.Screen;
 
 namespace ClipPanda.Views;
 
@@ -18,6 +19,8 @@ public partial class MainWindow : Window
     private readonly MainViewModel _viewModel;
     private readonly DatabaseService _databaseService;
     private readonly SettingsService _settingsService;
+    private bool _isDragging = false;
+    private Point _dragStartPoint;
 
     public MainWindow(DatabaseService databaseService, ClipboardMonitorService clipboardMonitor, HotkeyService hotkeyService, SettingsService settingsService)
     {
@@ -32,12 +35,129 @@ public partial class MainWindow : Window
         clipboardMonitor.ClipboardChanged += OnClipboardChanged;
 
         Loaded += MainWindow_Loaded;
+        LocationChanged += MainWindow_LocationChanged;
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         SearchTextBox.Focus();
-        CenterWindow();
+        PositionWindow();
+    }
+
+    /// <summary>
+    /// 窗口位置变化时保存位置
+    /// </summary>
+    private void MainWindow_LocationChanged(object? sender, EventArgs e)
+    {
+        if (_settingsService.Settings.RememberWindowPosition && IsVisible && WindowState == WindowState.Normal)
+        {
+            _settingsService.Update(s =>
+            {
+                s.WindowLeft = Left;
+                s.WindowTop = Top;
+                // 获取当前窗口所在的屏幕
+                var currentScreen = GetCurrentScreen();
+                if (currentScreen != null)
+                {
+                    s.WindowScreenDeviceName = currentScreen.DeviceName;
+                }
+            });
+        }
+    }
+
+    /// <summary>
+    /// 获取窗口当前所在的屏幕
+    /// </summary>
+    private FormsScreen? GetCurrentScreen()
+    {
+        var windowHandle = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+        return FormsScreen.FromHandle(windowHandle);
+    }
+
+    /// <summary>
+    /// 定位窗口 - 支持多屏和位置记忆
+    /// </summary>
+    private void PositionWindow()
+    {
+        var settings = _settingsService.Settings;
+
+        // 如果有记住的位置，尝试恢复到对应屏幕
+        if (settings.RememberWindowPosition && settings.WindowLeft >= 0 && settings.WindowTop >= 0)
+        {
+            // 查找之前保存的屏幕
+            var targetScreen = FindScreenByDeviceName(settings.WindowScreenDeviceName);
+            
+            if (targetScreen != null)
+            {
+                // 恢复到之前屏幕的相对位置
+                Left = settings.WindowLeft;
+                Top = settings.WindowTop;
+                
+                // 确保窗口在屏幕可见区域内
+                EnsureWindowVisible(targetScreen);
+                return;
+            }
+        }
+
+        // 默认居中显示（Raycast风格）
+        CenterWindowOnPrimaryScreen();
+    }
+
+    /// <summary>
+    /// 根据设备名查找屏幕
+    /// </summary>
+    private FormsScreen? FindScreenByDeviceName(string? deviceName)
+    {
+        if (string.IsNullOrEmpty(deviceName))
+            return null;
+
+        return FormsScreen.AllScreens.FirstOrDefault(s => s.DeviceName == deviceName);
+    }
+
+    /// <summary>
+    /// 确保窗口在屏幕可见区域内
+    /// </summary>
+    private void EnsureWindowVisible(FormsScreen screen)
+    {
+        var workingArea = screen.WorkingArea;
+        
+        // 如果窗口超出屏幕边界，调整到可见区域
+        if (Left + ActualWidth > workingArea.Right)
+            Left = workingArea.Right - ActualWidth;
+        if (Left < workingArea.Left)
+            Left = workingArea.Left;
+        if (Top + ActualHeight > workingArea.Bottom)
+            Top = workingArea.Bottom - ActualHeight;
+        if (Top < workingArea.Top)
+            Top = workingArea.Top;
+    }
+
+    /// <summary>
+    /// 在主屏幕中央显示（Raycast风格）
+    /// </summary>
+    private void CenterWindowOnPrimaryScreen()
+    {
+        var primaryScreen = FormsScreen.PrimaryScreen;
+        if (primaryScreen != null)
+        {
+            var workingArea = primaryScreen.WorkingArea;
+            Left = (workingArea.Width - Width) / 2 + workingArea.Left;
+            Top = (workingArea.Height - Height) / 2 + workingArea.Top;
+        }
+    }
+
+    /// <summary>
+    /// 在当前鼠标所在的屏幕中央显示
+    /// </summary>
+    private void CenterWindowOnCurrentScreen()
+    {
+        var currentScreen = FormsScreen.FromPoint(System.Windows.Forms.Cursor.Position);
+        if (currentScreen != null)
+        {
+            var workingArea = currentScreen.WorkingArea;
+            Left = (workingArea.Width - Width) / 2 + workingArea.Left;
+            Top = (workingArea.Height - Height) / 2 + workingArea.Top;
+        }
     }
 
     /// <summary>
@@ -51,24 +171,32 @@ public partial class MainWindow : Window
         }
         else
         {
+            // 每次显示时重新定位（跟随当前鼠标所在屏幕）
+            CenterWindowOnCurrentScreen();
             Show();
             Activate();
             SearchTextBox.Focus();
             SearchTextBox.SelectAll();
-            CenterWindow();
         }
     }
 
     /// <summary>
-    /// 窗口居中
+    /// 标题栏鼠标按下 - 开始拖动
     /// </summary>
-    private void CenterWindow()
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        var screen = System.Windows.Forms.Screen.FromHandle(
-            new System.Windows.Interop.WindowInteropHelper(this).Handle);
-
-        Left = (screen.WorkingArea.Width - ActualWidth) / 2 + screen.WorkingArea.Left;
-        Top = (screen.WorkingArea.Height - ActualHeight) / 2 + screen.WorkingArea.Top;
+        if (e.ClickCount == 2)
+        {
+            // 双击标题栏可以最大化/还原（可选）
+            // WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        }
+        else
+        {
+            // 开始拖动
+            _isDragging = true;
+            _dragStartPoint = e.GetPosition(this);
+            DragMove();
+        }
     }
 
     /// <summary>

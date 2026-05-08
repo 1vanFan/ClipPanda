@@ -74,4 +74,24 @@ public class AppSettings
     /// 主题配色（Blue, Green, Purple, Orange, Pink）
     /// </summary>
     public string ThemeColor { get; set; } = "Blue";
+
+    /// <summary>
+    /// 窗口最后位置的X坐标（-1表示居中）
+    /// </summary>
+    public double WindowLeft { get; set; } = -1;
+
+    /// <summary>
+    /// 窗口最后位置的Y坐标（-1表示居中）
+    /// </summary>
+    public double WindowTop { get; set; } = -1;
+
+    /// <summary>
+    /// 窗口最后所在的屏幕设备名
+    /// </summary>
+    public string? WindowScreenDeviceName { get; set; }
+
+    /// <summary>
+    /// 是否记住窗口位置
+    /// </summary>
+    public bool RememberWindowPosition { get; set; } = true;
 }
