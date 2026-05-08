@@ -44,6 +44,13 @@ public class ClipboardMonitorService : IDisposable
     private IntPtr _hwnd;
     private bool _isMonitoring;
     private readonly bool _enableDeduplication;
+    
+    // 用于防止并发处理的信号量
+    private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
+    // 用于队列化剪贴板更新事件
+    private readonly Queue<ClipboardItem> _pendingItems = new();
+    private readonly object _queueLock = new();
+    private bool _isProcessing = false;
 
     /// <summary>
     /// 当剪贴板内容变化时触发
@@ -104,6 +111,7 @@ public class ClipboardMonitorService : IDisposable
         _hwndSource?.Dispose();
         _hwndSource = null;
         _isMonitoring = false;
+        _processingSemaphore.Dispose();
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -111,39 +119,92 @@ public class ClipboardMonitorService : IDisposable
         if (msg == WM_CLIPBOARDUPDATE)
         {
             handled = true;
-            _ = Task.Run(() => ProcessClipboardChangeAsync());
+            // 使用 Dispatcher 确保在 UI 线程捕获剪贴板内容
+            _ = Application.Current.Dispatcher.InvokeAsync(async () =>
+            {
+                var item = CaptureClipboardContent();
+                if (item != null)
+                {
+                    await EnqueueAndProcessAsync(item);
+                }
+            });
         }
 
         return IntPtr.Zero;
     }
 
-    private async Task ProcessClipboardChangeAsync()
+    /// <summary>
+    /// 将项目加入队列并触发处理
+    /// </summary>
+    private async Task EnqueueAndProcessAsync(ClipboardItem item)
     {
+        lock (_queueLock)
+        {
+            _pendingItems.Enqueue(item);
+            if (_isProcessing) return;
+            _isProcessing = true;
+        }
+
+        // 使用信号量确保只有一个处理任务在运行
+        await _processingSemaphore.WaitAsync();
         try
         {
-            var item = await Application.Current.Dispatcher.InvokeAsync(() => CaptureClipboardContent());
+            await ProcessQueueAsync();
+        }
+        finally
+        {
+            _processingSemaphore.Release();
+        }
+    }
 
-            if (item == null) return;
-
-            if (_enableDeduplication && !string.IsNullOrEmpty(item.ContentHash))
+    /// <summary>
+    /// 处理队列中的所有项目
+    /// </summary>
+    private async Task ProcessQueueAsync()
+    {
+        while (true)
+        {
+            ClipboardItem? item;
+            lock (_queueLock)
             {
-                var existingItem = await _databaseService.FindByHashAsync(item.ContentHash);
-                if (existingItem != null)
+                if (_pendingItems.Count == 0)
                 {
-                    existingItem.CopyTime = DateTime.Now;
-                    await _databaseService.UpdateItemAsync(existingItem);
-                    ClipboardChanged?.Invoke(existingItem);
+                    _isProcessing = false;
                     return;
                 }
+                item = _pendingItems.Dequeue();
             }
 
-            await _databaseService.AddItemAsync(item);
-            ClipboardChanged?.Invoke(item);
+            try
+            {
+                await ProcessSingleItemAsync(item);
+            }
+            catch (Exception ex)
+            {
+                ErrorOccurred?.Invoke(ex);
+            }
         }
-        catch (Exception ex)
+    }
+
+    /// <summary>
+    /// 处理单个剪贴板项目
+    /// </summary>
+    private async Task ProcessSingleItemAsync(ClipboardItem item)
+    {
+        if (_enableDeduplication && !string.IsNullOrEmpty(item.ContentHash))
         {
-            ErrorOccurred?.Invoke(ex);
+            var existingItem = await _databaseService.FindByHashAsync(item.ContentHash);
+            if (existingItem != null)
+            {
+                existingItem.CopyTime = DateTime.Now;
+                await _databaseService.UpdateItemAsync(existingItem);
+                ClipboardChanged?.Invoke(existingItem);
+                return;
+            }
         }
+
+        await _databaseService.AddItemAsync(item);
+        ClipboardChanged?.Invoke(item);
     }
 
     private ClipboardItem? CaptureClipboardContent()
