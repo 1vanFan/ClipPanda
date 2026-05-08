@@ -45,11 +45,8 @@ public class ClipboardMonitorService : IDisposable
     private bool _isMonitoring;
     private readonly bool _enableDeduplication;
     
-    // 用于防止并发处理的信号量
-    private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
-    // 用于队列化剪贴板更新事件
-    private readonly Queue<ClipboardItem> _pendingItems = new();
-    private readonly object _queueLock = new();
+    // 用于防止并发处理的锁
+    private readonly object _processingLock = new();
     private bool _isProcessing = false;
 
     /// <summary>
@@ -111,7 +108,6 @@ public class ClipboardMonitorService : IDisposable
         _hwndSource?.Dispose();
         _hwndSource = null;
         _isMonitoring = false;
-        _processingSemaphore.Dispose();
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -119,14 +115,10 @@ public class ClipboardMonitorService : IDisposable
         if (msg == WM_CLIPBOARDUPDATE)
         {
             handled = true;
-            // 使用 Dispatcher 确保在 UI 线程捕获剪贴板内容
-            _ = Application.Current.Dispatcher.InvokeAsync(async () =>
+            // 使用 Task.Run 但添加锁防止并发
+            _ = Task.Run(async () =>
             {
-                var item = CaptureClipboardContent();
-                if (item != null)
-                {
-                    await EnqueueAndProcessAsync(item);
-                }
+                await ProcessClipboardChangeWithLockAsync();
             });
         }
 
@@ -134,77 +126,65 @@ public class ClipboardMonitorService : IDisposable
     }
 
     /// <summary>
-    /// 将项目加入队列并触发处理
+    /// 带锁的剪贴板处理，确保不会并发执行
     /// </summary>
-    private async Task EnqueueAndProcessAsync(ClipboardItem item)
+    private async Task ProcessClipboardChangeWithLockAsync()
     {
-        lock (_queueLock)
+        // 如果已经有任务在处理，跳过这次事件
+        lock (_processingLock)
         {
-            _pendingItems.Enqueue(item);
-            if (_isProcessing) return;
+            if (_isProcessing)
+            {
+                return;
+            }
             _isProcessing = true;
         }
 
-        // 使用信号量确保只有一个处理任务在运行
-        await _processingSemaphore.WaitAsync();
         try
         {
-            await ProcessQueueAsync();
+            await ProcessClipboardChangeAsync();
         }
         finally
         {
-            _processingSemaphore.Release();
+            lock (_processingLock)
+            {
+                _isProcessing = false;
+            }
         }
     }
 
-    /// <summary>
-    /// 处理队列中的所有项目
-    /// </summary>
-    private async Task ProcessQueueAsync()
+    private async Task ProcessClipboardChangeAsync()
     {
-        while (true)
+        try
         {
-            ClipboardItem? item;
-            lock (_queueLock)
+            // 在 UI 线程捕获剪贴板内容
+            var item = await Application.Current.Dispatcher.InvokeAsync(() => CaptureClipboardContent());
+
+            if (item == null) return;
+
+            if (_enableDeduplication && !string.IsNullOrEmpty(item.ContentHash))
             {
-                if (_pendingItems.Count == 0)
+                var existingItem = await _databaseService.FindByHashAsync(item.ContentHash);
+                if (existingItem != null)
                 {
-                    _isProcessing = false;
+                    existingItem.CopyTime = DateTime.Now;
+                    await _databaseService.UpdateItemAsync(existingItem);
+                    ClipboardChanged?.Invoke(existingItem);
                     return;
                 }
-                item = _pendingItems.Dequeue();
             }
 
-            try
-            {
-                await ProcessSingleItemAsync(item);
-            }
-            catch (Exception ex)
+            await _databaseService.AddItemAsync(item);
+            ClipboardChanged?.Invoke(item);
+        }
+        catch (Exception ex)
+        {
+            // 确保错误回调在 UI 线程执行
+            Application.Current.Dispatcher.Invoke(() =>
             {
                 ErrorOccurred?.Invoke(ex);
-            }
+            });
         }
-    }
-
-    /// <summary>
-    /// 处理单个剪贴板项目
-    /// </summary>
-    private async Task ProcessSingleItemAsync(ClipboardItem item)
-    {
-        if (_enableDeduplication && !string.IsNullOrEmpty(item.ContentHash))
-        {
-            var existingItem = await _databaseService.FindByHashAsync(item.ContentHash);
-            if (existingItem != null)
-            {
-                existingItem.CopyTime = DateTime.Now;
-                await _databaseService.UpdateItemAsync(existingItem);
-                ClipboardChanged?.Invoke(existingItem);
-                return;
-            }
-        }
-
-        await _databaseService.AddItemAsync(item);
-        ClipboardChanged?.Invoke(item);
     }
 
     private ClipboardItem? CaptureClipboardContent()
