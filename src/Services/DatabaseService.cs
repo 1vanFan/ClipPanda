@@ -38,7 +38,7 @@ public class ClipboardDbContext : DbContext
         });
     }
 
-    private static string GetDefaultDbPath()
+    public static string GetDefaultDbPath()
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         return Path.Combine(appDataPath, "ClipPanda", "clipboard.db");
@@ -46,16 +46,26 @@ public class ClipboardDbContext : DbContext
 }
 
 /// <summary>
-/// 数据库服务
+/// 数据库服务 - 使用 DbContext 工厂模式支持多线程访问
 /// </summary>
-public class DatabaseService : IDisposable
+public class DatabaseService
 {
-    private readonly ClipboardDbContext _context;
+    private readonly string _dbPath;
 
     public DatabaseService(string? dbPath = null)
     {
-        _context = new ClipboardDbContext(dbPath);
-        _context.Database.EnsureCreated();
+        _dbPath = dbPath ?? ClipboardDbContext.GetDefaultDbPath();
+        // 确保数据库创建
+        using var context = CreateContext();
+        context.Database.EnsureCreated();
+    }
+
+    /// <summary>
+    /// 创建新的 DbContext 实例
+    /// </summary>
+    private ClipboardDbContext CreateContext()
+    {
+        return new ClipboardDbContext(_dbPath);
     }
 
     /// <summary>
@@ -63,8 +73,9 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<int> AddItemAsync(ClipboardItem item)
     {
-        _context.ClipboardItems.Add(item);
-        await _context.SaveChangesAsync();
+        using var context = CreateContext();
+        context.ClipboardItems.Add(item);
+        await context.SaveChangesAsync();
         return item.Id;
     }
 
@@ -73,7 +84,8 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<List<ClipboardItem>> GetAllItemsAsync(int limit = 100)
     {
-        return await _context.ClipboardItems
+        using var context = CreateContext();
+        return await context.ClipboardItems
             .OrderByDescending(i => i.CopyTime)
             .Take(limit)
             .ToListAsync();
@@ -84,11 +96,12 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<List<ClipboardItem>> SearchItemsAsync(string keyword, int limit = 50)
     {
+        using var context = CreateContext();
         if (string.IsNullOrWhiteSpace(keyword))
             return await GetAllItemsAsync(limit);
 
         var lowerKeyword = keyword.ToLower();
-        return await _context.ClipboardItems
+        return await context.ClipboardItems
             .Where(i => i.Preview != null && i.Preview.ToLower().Contains(lowerKeyword))
             .OrderByDescending(i => i.CopyTime)
             .Take(limit)
@@ -100,7 +113,8 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<List<ClipboardItem>> GetFavoriteItemsAsync(int limit = 100)
     {
-        return await _context.ClipboardItems
+        using var context = CreateContext();
+        return await context.ClipboardItems
             .Where(i => i.IsFavorited)
             .OrderByDescending(i => i.CopyTime)
             .Take(limit)
@@ -112,7 +126,8 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<List<ClipboardItem>> GetItemsByTypeAsync(ContentType? contentType, int limit = 100)
     {
-        var query = _context.ClipboardItems.AsQueryable();
+        using var context = CreateContext();
+        var query = context.ClipboardItems.AsQueryable();
         
         if (contentType.HasValue)
         {
@@ -130,7 +145,8 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<List<ClipboardItem>> SearchItemsByTypeAsync(string keyword, ContentType? contentType, int limit = 100)
     {
-        var query = _context.ClipboardItems.AsQueryable();
+        using var context = CreateContext();
+        var query = context.ClipboardItems.AsQueryable();
         
         if (contentType.HasValue)
         {
@@ -154,7 +170,8 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<List<ClipboardItem>> GetFavoriteItemsByTypeAsync(ContentType? contentType, int limit = 100)
     {
-        var query = _context.ClipboardItems.Where(i => i.IsFavorited);
+        using var context = CreateContext();
+        var query = context.ClipboardItems.Where(i => i.IsFavorited);
         
         if (contentType.HasValue)
         {
@@ -172,11 +189,12 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<List<ClipboardItem>> SearchFavoriteItemsAsync(string keyword, int limit = 100)
     {
+        using var context = CreateContext();
         if (string.IsNullOrWhiteSpace(keyword))
             return await GetFavoriteItemsAsync(limit);
 
         var lowerKeyword = keyword.ToLower();
-        return await _context.ClipboardItems
+        return await context.ClipboardItems
             .Where(i => i.IsFavorited && i.Preview != null && i.Preview.ToLower().Contains(lowerKeyword))
             .OrderByDescending(i => i.CopyTime)
             .Take(limit)
@@ -188,7 +206,8 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<ClipboardItem?> GetItemByIdAsync(int id)
     {
-        return await _context.ClipboardItems.FindAsync(id);
+        using var context = CreateContext();
+        return await context.ClipboardItems.FindAsync(id);
     }
 
     /// <summary>
@@ -196,8 +215,9 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task UpdateItemAsync(ClipboardItem item)
     {
-        _context.ClipboardItems.Update(item);
-        await _context.SaveChangesAsync();
+        using var context = CreateContext();
+        context.ClipboardItems.Update(item);
+        await context.SaveChangesAsync();
     }
 
     /// <summary>
@@ -205,11 +225,12 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task DeleteItemAsync(int id)
     {
-        var item = await _context.ClipboardItems.FindAsync(id);
+        using var context = CreateContext();
+        var item = await context.ClipboardItems.FindAsync(id);
         if (item != null)
         {
-            _context.ClipboardItems.Remove(item);
-            await _context.SaveChangesAsync();
+            context.ClipboardItems.Remove(item);
+            await context.SaveChangesAsync();
         }
     }
 
@@ -218,7 +239,8 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<ClipboardItem?> FindByHashAsync(string hash)
     {
-        return await _context.ClipboardItems
+        using var context = CreateContext();
+        return await context.ClipboardItems
             .FirstOrDefaultAsync(i => i.ContentHash == hash);
     }
 
@@ -227,11 +249,12 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task IncrementUseCountAsync(int id)
     {
-        var item = await _context.ClipboardItems.FindAsync(id);
+        using var context = CreateContext();
+        var item = await context.ClipboardItems.FindAsync(id);
         if (item != null)
         {
             item.UseCount++;
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
     }
 
@@ -240,13 +263,14 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<int> CleanupExpiredItemsAsync(int retentionDays)
     {
+        using var context = CreateContext();
         var cutoffDate = DateTime.Now.AddDays(-retentionDays);
-        var expiredItems = await _context.ClipboardItems
+        var expiredItems = await context.ClipboardItems
             .Where(i => !i.IsFavorited && i.CopyTime < cutoffDate)
             .ToListAsync();
 
-        _context.ClipboardItems.RemoveRange(expiredItems);
-        await _context.SaveChangesAsync();
+        context.ClipboardItems.RemoveRange(expiredItems);
+        await context.SaveChangesAsync();
 
         return expiredItems.Count;
     }
@@ -256,11 +280,7 @@ public class DatabaseService : IDisposable
     /// </summary>
     public async Task<int> GetItemCountAsync()
     {
-        return await _context.ClipboardItems.CountAsync();
-    }
-
-    public void Dispose()
-    {
-        _context.Dispose();
+        using var context = CreateContext();
+        return await context.ClipboardItems.CountAsync();
     }
 }

@@ -160,10 +160,24 @@ public partial class App : Application
     /// </summary>
     private void CreateTaskbarIcon()
     {
-        // 使用项目自带的 logo 图标文件
+        // 尝试从 Assets 目录加载图标
         var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "icon.ico");
-        var icon = System.Drawing.Icon.ExtractAssociatedIcon(iconPath)
-                   ?? CreateFallbackIcon();
+        System.Drawing.Icon? icon = null;
+        
+        try
+        {
+            if (System.IO.File.Exists(iconPath))
+            {
+                icon = System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Warning($"加载图标文件失败: {ex.Message}");
+        }
+        
+        // 如果加载失败，使用备用图标
+        icon ??= CreateFallbackIcon();
 
         _taskbarIcon = new TaskbarIcon
         {
