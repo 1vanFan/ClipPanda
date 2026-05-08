@@ -1,5 +1,5 @@
-using System.Windows;
 using System.Windows.Media;
+using Application = System.Windows.Application;
 
 namespace ClipPanda.Services;
 
