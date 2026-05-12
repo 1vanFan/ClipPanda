@@ -127,6 +127,17 @@ public class SettingsViewModel : INotifyPropertyChanged
             };
         });
 
+        // 应用开机自启动设置
+        try
+        {
+            StartupService.SetStartup(StartWithWindows);
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"设置开机自启动失败: {ex.Message}", "错误", 
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+        }
+
         // 应用深色模式主题
         bool? useDarkMode = DarkModeOption switch
         {

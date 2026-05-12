@@ -61,6 +61,17 @@ public partial class App : Application
             _settingsService = new SettingsService();
             LogService.Info("设置服务初始化完成");
 
+            // 应用开机自启动设置
+            try
+            {
+                StartupService.SetStartup(_settingsService.Settings.StartWithWindows);
+                LogService.Info($"开机自启动设置已应用: {_settingsService.Settings.StartWithWindows}");
+            }
+            catch (Exception ex)
+            {
+                LogService.Warning($"应用开机自启动设置失败: {ex.Message}");
+            }
+
             // 应用主题（使用深色模式设置）
             var useDarkMode = _settingsService.Settings.UseDarkMode;
             ThemeService.ApplyTheme("Blue", useDarkMode);
